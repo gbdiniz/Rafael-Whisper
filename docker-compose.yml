@@ -1,0 +1,22 @@
+services:
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${WHISPER_PORT:-9000}:9000"
+    environment:
+      ASR_ENGINE: ${ASR_ENGINE:-faster_whisper}
+      ASR_MODEL: ${ASR_MODEL:-base}
+      ASR_DEVICE: ${ASR_DEVICE:-cpu}
+      ASR_MODEL_PATH: ${ASR_MODEL_PATH:-/data/whisper}
+      ASR_COMPUTE_TYPE: ${ASR_COMPUTE_TYPE:-int8}
+    volumes:
+      - whisper-models:/data/whisper
+    deploy:
+      resources:
+        limits:
+          cpus: "6"
+          memory: 8G
+
+volumes:
+  whisper-models:

@@ -1,0 +1,40 @@
+# aaPanel (Debian 13) — Rafael-Whisper Nginx snippets
+#
+# Do NOT copy this file as a standalone vhost. aaPanel generates SSL and server
+# blocks when you add a site. Use this as reference for manual edits:
+#
+# 1. Global map  → aaPanel Nginx main config (/www/server/nginx/conf/nginx.conf)
+#                  inside http { }, before vhost includes.
+# 2. Site block  → Website → whisper.example.com → Conf
+#                  (/www/server/panel/vhost/nginx/whisper.example.com.conf)
+#
+# Full steps: docs/deployment.md §4
+
+# --- Paste in Nginx http { } block (once per server) ---
+
+map $http_authorization $whisper_auth_ok {
+    default 0;
+    "Bearer YOUR_BEARER_TOKEN" 1;
+}
+
+# --- Paste inside the SSL server { } for whisper.example.com ---
+
+client_max_body_size 12M;
+
+# allow RAFAEL_SERVER_IP;
+# deny all;
+
+location / {
+    if ($whisper_auth_ok = 0) {
+        return 401;
+    }
+
+    proxy_pass http://127.0.0.1:9000;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 120s;
+    proxy_send_timeout 120s;
+}
